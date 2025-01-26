@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Chatroom</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    #chat-container {
+      width: 90%;
+      max-width: 500px;
+      height: 70vh;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    #messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      margin: 5px 0;
+      padding: 5px 10px;
+      border-radius: 4px;
+      max-width: 80%;
+    }
+    .sent {
+      background-color: #d1e7ff;
+      align-self: flex-end;
+      text-align: right;
+    }
+    .received {
+      background-color: #d1ffd6;
+      align-self: flex-start;
+      text-align: left;
+    }
+    #message-input {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      margin-left: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="messages"></div>
+    <div id="message-input">
+      <input type="text" id="input-message" placeholder="Type your message..." />
+      <button id="send-button">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const socket = new WebSocket('ws://localhost:3000');
+
+    const messagesDiv = document.getElementById('messages');
+    const inputMessage = document.getElementById('input-message');
+    const sendButton = document.getElementById('send-button');
+
+    let clientId = null;
+
+    // Render a message in the chat
+    function renderMessage(message, type) {
+      const messageDiv = document.createElement('div');
+      messageDiv.textContent = message.text;
+      messageDiv.className = `message ${type}`;
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the latest message
+    }
+
+    // Listen for WebSocket events
+    socket.addEventListener('open', () => {
+      console.log('WebSocket connection opened');
+    });
+
+    socket.addEventListener('error', (err) => {
+      console.error('WebSocket error:', err);
+    });
+
+    socket.addEventListener('message', (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === 'init') {
+        // Initialize clientId and render chat history
+        clientId = data.clientId;
+        data.history.forEach(msg => {
+          renderMessage(msg, msg.clientId === clientId ? 'sent' : 'received');
+        });
+      } else if (data.type === 'message') {
+        // Render received messages
+        const type = data.data.clientId === clientId ? 'sent' : 'received';
+        renderMessage(data.data, type);
+      }
+    });
+
+    // Send a message to the server
+    sendButton.addEventListener('click', () => {
+      if (inputMessage.value.trim() !== '') {
+        const message = { text: inputMessage.value };
+        renderMessage(message, 'sent'); // Immediately render the message on the right
+        socket.send(JSON.stringify(message)); // Send to server
+        inputMessage.value = ''; // Clear the input field
+      }
+    });
+
+    // Send message on Enter key press
+    inputMessage.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        sendButton.click();
+      }
+    });
+  </script>
+</body>
+</html>
