@@ -71,3 +71,23 @@
   button:hover {
     background-color: #0056b3;
   }
+  #homepage {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  #homepage button {
+    padding: 10px 20px;
+    font-size: 18px;
+    margin: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  #homepage button:hover {
+    background-color: #0056b3;
+  }
+  

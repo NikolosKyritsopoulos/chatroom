@@ -3,76 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebSocket Chatroom</title>
+  <title>Homepage</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="chat-container">
-    <div id="messages"></div>
-    <div id="message-input">
-      <input type="text" id="input-message" placeholder="Type your message..." />
-      <button id="send-button">Send</button>
-    </div>
+  <div id="homepage">
+    <h1>Welcome to the WebSocket App</h1>
+    <p>Choose a page to navigate:</p>
+    <button onclick="window.location.href='chatroom.html'">Chatroom</button>
+    <button onclick="window.location.href='wavelength.html'">Wavelength</button>
   </div>
-
-  <script>
-    //ws://localhost:3000
-    const socket = new WebSocket('wss://nikos-testing-space-3f707f51b575.herokuapp.com');
-
-    const messagesDiv = document.getElementById('messages');
-    const inputMessage = document.getElementById('input-message');
-    const sendButton = document.getElementById('send-button');
-
-    let clientId = null;
-
-    // Render a message in the chat
-    function renderMessage(message, type, user) {
-      const messageDiv = document.createElement('div');
-      messageDiv.textContent = `${user}: ${message.text}`;
-      messageDiv.className = `message ${type}`;
-      messagesDiv.appendChild(messageDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the latest message
-    }
-
-    // Listen for WebSocket events
-    socket.addEventListener('open', () => {
-      console.log('WebSocket connection opened');
-    });
-
-    socket.addEventListener('error', (err) => {
-      console.error('WebSocket error:', err);
-    });
-
-    socket.addEventListener('message', (event) => {
-      const data = JSON.parse(event.data);
-
-      if (data.type === 'init') {
-        clientId = data.clientId;
-        data.history.forEach(msg => {
-          renderMessage(msg, msg.clientId === clientId ? 'sent' : 'received', msg.clientId);
-        });
-      } else if (data.type === 'message') {
-        const type = data.data.clientId === clientId ? 'sent' : 'received';
-        renderMessage(data.data, type, data.data.clientId);
-      }
-    });
-
-    // Send a message to the server
-    sendButton.addEventListener('click', () => {
-      if (inputMessage.value.trim() !== '') {
-        const message = { text: inputMessage.value };
-        renderMessage(message, 'sent', clientId); // Immediately render the message
-        socket.send(JSON.stringify(message)); // Send to server
-        inputMessage.value = ''; // Clear the input field
-      }
-    });
-
-    // Send message on Enter key press
-    inputMessage.addEventListener('keypress', (event) => {
-      if (event.key === 'Enter') {
-        sendButton.click();
-      }
-    });
-  </script>
 </body>
 </html>
